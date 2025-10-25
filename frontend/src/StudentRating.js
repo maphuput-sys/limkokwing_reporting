@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api/ratings"; // ✅ matches backend route
+const API_BASE_URL = "https://limkokwing-reporting3.onrender.com/api/ratings"; // ✅ matches backend route
 
 const StudentRating = () => {
   const [lecturers, setLecturers] = useState([]);

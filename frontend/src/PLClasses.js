@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api/classes";
+const API_BASE_URL = "https://limkokwing-reporting3.onrender.com/api/classes";
 
 const PLClasses = () => {
   const [classesData, setClassesData] = useState([]);

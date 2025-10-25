@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
 // Backend URL
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://limkokwing-reporting3.onrender.com";
 
 const Registration = () => {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_BASE_URL = "http://localhost:5000/api/reports";
+const API_BASE_URL = "https://limkokwing-reporting3.onrender.com/api/reports";
 
 const PRLReports = () => {
   const [reports, setReports] = useState([]);

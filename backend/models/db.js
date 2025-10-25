@@ -1,10 +1,13 @@
 import mysql from "mysql2/promise";
 
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "0629",
-  database: "luct",
+  host: "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
+  user: "6us27jBuQ8SY9kd.root",
+  password: "IJcg6ssNnlimAvvr",
+  database: "test",
+  waitForConnections: true,
+  connectionLimit: 10,
+  ssl: {rejectUnauthorized: true}
 });
 
 try {

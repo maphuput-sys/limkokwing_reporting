@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api"; // your backend URL
+const API_BASE_URL = "https://limkokwing-reporting3.onrender.com/api"; // your backend URL
 
 const PRLCourses = ({ plId }) => {
   const [courses, setCourses] = useState([]);

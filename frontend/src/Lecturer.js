@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://limkokwing-reporting3.onrender.com/api";
 
 const Lecturer = () => {
   const [activeSection, setActiveSection] = useState("courses");

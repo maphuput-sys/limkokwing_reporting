@@ -5,7 +5,7 @@ import PRLReports from "./PRLReports";
 import axios from "axios";
 import "./App.css";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://limkokwing-reporting3.onrender.com/api";
 
 const PRL = () => {
   const [activeSection, setActiveSection] = useState("classes");
