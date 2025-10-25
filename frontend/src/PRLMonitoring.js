@@ -1,6 +1,6 @@
 import React from "react";
 
-const Monitoring = () => {
+const PRLMonitoring = () => {
   const dummyData = [
     { date: "2025-10-01", course: "Software Engineering", studentsPresent: 25, totalStudents: 30, venue: "Room 101" },
     { date: "2025-10-02", course: "Multimedia Design", studentsPresent: 28, totalStudents: 30, venue: "Room 102" },
@@ -37,4 +37,4 @@ const Monitoring = () => {
   );
 };
 
-export default Monitoring;
+export default PRLMonitoring;

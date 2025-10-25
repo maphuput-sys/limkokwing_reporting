@@ -1,39 +1,100 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-const Rating = () => {
-  const [ratings, setRatings] = useState([
-    { course: "Software Engineering", lecturer: "Dr. Maphupu", rating: 4 },
-    { course: "Multimedia", lecturer: "Mrs. Ts'along", rating: 3 },
-  ]);
+const API_BASE_URL = "http://localhost:5000/api";
 
-  const handleChange = (index, value) => {
-    const newRatings = [...ratings];
-    newRatings[index].rating = value;
-    setRatings(newRatings);
+const PLRating = () => {
+  const [ratings, setRatings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch all ratings from backend
+  useEffect(() => {
+    const fetchRatings = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/all/ratings`);
+        setRatings(response.data);
+      } catch (err) {
+        console.error("❌ Error fetching ratings:", err);
+        setError("Failed to load ratings.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRatings();
+  }, []);
+
+  // Calculate totals and averages
+  const totalRatings = ratings.length;
+  const averageRating =
+    totalRatings > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings
+      : 0;
+
+  const cardStyle = {
+    flex: "1 1 200px",
+    padding: "20px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+    backgroundColor: "#fff",
+    textAlign: "center",
+    minWidth: "180px",
   };
+
+  if (loading) return <p className="text-center mt-5">Loading ratings...</p>;
+  if (error) return <p className="text-danger text-center mt-5">{error}</p>;
 
   return (
     <div>
-      <h2 className="mb-4 text-center">Rating</h2>
+      <h2 className="mb-4 text-center">⭐ All Lecturer Ratings (PL View)</h2>
+
+      {/* Summary Cards */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          gap: "20px",
+          marginBottom: "30px",
+        }}
+      >
+        <div style={cardStyle}>
+          <h4>Total Ratings</h4>
+          <p style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            {totalRatings}
+          </p>
+        </div>
+        <div style={cardStyle}>
+          <h4>Average Rating</h4>
+          <p style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            {averageRating.toFixed(1)} / 5
+          </p>
+          <div style={{ fontSize: "1.3rem" }}>
+            {"⭐".repeat(Math.round(averageRating))}
+            {"☆".repeat(5 - Math.round(averageRating))}
+          </div>
+        </div>
+      </div>
+
+      {/* Individual Ratings */}
       <div className="row">
         {ratings.map((item, index) => (
           <div className="col-md-6 mb-3" key={index}>
             <div className="card shadow-sm p-3 text-center">
-              <h5 className="card-title">{item.course}</h5>
-              <p><strong>Lecturer:</strong> {item.lecturer}</p>
-              <div>
-                <label>Rating: </label>
-                <select
-                  className="form-select mt-1"
-                  value={item.rating}
-                  onChange={(e) => handleChange(index, parseInt(e.target.value))}
-                >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
-                </select>
+              <h5 className="card-title">{item.lecturer_name}</h5>
+              <p>
+                <strong>Course:</strong> {item.course_name || "N/A"}
+              </p>
+              <p>
+                <strong>Student:</strong> {item.student_name}
+              </p>
+              <p>
+                <strong>Feedback:</strong>{" "}
+                {item.feedback ? item.feedback : "No feedback"}
+              </p>
+              <div className="mt-2">
+                {"⭐".repeat(item.rating)}
+                {"☆".repeat(5 - item.rating)}
               </div>
             </div>
           </div>
@@ -43,4 +104,4 @@ const Rating = () => {
   );
 };
 
-export default Rating;
+export default PLRating;

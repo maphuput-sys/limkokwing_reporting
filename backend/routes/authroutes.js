@@ -1,140 +1,105 @@
 import express from "express";
+import pool from "../models/db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import pool from "../models/db.js";
 
 const router = express.Router();
-const SECRET = "your_secret_key_here"; // use process.env.JWT_SECRET in production
+const JWT_SECRET = "your_secret_key"; // store in .env ideally
 
-// ======================================================
-// REGISTER USER (Student / Lecturer / PL / PRL)
-// ======================================================
+/* ----------------------------
+   REGISTER (Student, Lecturer, PRL, PL)
+---------------------------- */
 router.post("/register", async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, department } = req.body;
+
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  if (!["student", "lecturer", "prl", "pl"].includes(role)) {
+    return res.status(400).json({ message: "Invalid role." });
+  }
 
   try {
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "All fields are required" });
+    // Check if email already exists in users table
+    const [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ message: "Email already registered." });
     }
 
-    // Check if email already exists across all tables
-    const [existingStudent] = await pool.execute(
-      "SELECT * FROM students WHERE email = ?",
-      [email]
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert into users table
+    const [result] = await pool.query(
+      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+      [name, email, hashedPassword, role]
     );
-    const [existingLecturer] = await pool.execute(
-      "SELECT * FROM lecturers WHERE email = ?",
-      [email]
-    );
 
-    if (existingStudent.length > 0 || existingLecturer.length > 0) {
-      return res.status(409).json({ message: "Email already registered" });
+    // If role is lecturer, insert into lecturers table
+    if (role === "lecturer") {
+      if (!department) {
+        return res.status(400).json({ message: "Department is required for lecturers." });
+      }
+
+      await pool.query(
+        "INSERT INTO lecturers (lecturer_name, lecturer_email, department) VALUES (?, ?, ?)",
+        [name, email, department]
+      );
     }
 
-    const hashed = await bcrypt.hash(password, 10);
-
-    let tableName;
-    let insertQuery;
-
-    switch (role) {
-      case "student":
-        tableName = "students";
-        insertQuery = "INSERT INTO students (name, email, password, role) VALUES (?, ?, ?, ?)";
-        await pool.execute(insertQuery, [name, email, hashed, role]);
-        break;
-
-      case "lecturer":
-        tableName = "lecturers";
-        insertQuery = "INSERT INTO lecturers (lecturer_name, email, password) VALUES (?, ?, ?)";
-        await pool.execute(insertQuery, [name, email, hashed]);
-        break;
-
-      case "prl":
-        tableName = "principal_lecturers";
-        insertQuery = "INSERT INTO principal_lecturers (name, email, password) VALUES (?, ?, ?)";
-        await pool.execute(insertQuery, [name, email, hashed]);
-        break;
-
-      case "pl":
-        tableName = "program_leaders";
-        insertQuery = "INSERT INTO program_leaders (name, email, password) VALUES (?, ?, ?)";
-        await pool.execute(insertQuery, [name, email, hashed]);
-        break;
-
-      default:
-        return res.status(400).json({ message: "Invalid role" });
-    }
-
-    res.status(201).json({ message: `${role} registered successfully!` });
+    res.json({
+      message: "Registration successful",
+      user: {
+        id: result.insertId,
+        name,
+        email,
+        role,
+      },
+    });
   } catch (err) {
-    console.error("Registration Error:", err);
-    res.status(500).json({ message: "Server error during registration" });
+    console.error("❌ Registration error:", err);
+    res.status(500).json({ message: "Registration failed.", error: err.message });
   }
 });
 
-// ======================================================
-// LOGIN USER (All roles)
-// ======================================================
+/* ----------------------------
+   LOGIN (Student, Lecturer, PRL, PL)
+---------------------------- */
 router.post("/login", async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required." });
+  }
 
   try {
-    let tableName;
-    let nameField = "name";
-
-    switch (role) {
-      case "student":
-        tableName = "students";
-        break;
-      case "lecturer":
-        tableName = "lecturers";
-        nameField = "lecturer_name";
-        break;
-      case "prl":
-        tableName = "principal_lecturers";
-        break;
-      case "pl":
-        tableName = "program_leaders";
-        break;
-      default:
-        return res.status(400).json({ message: "Invalid role" });
-    }
-
-    const [rows] = await pool.execute(
-      `SELECT * FROM ${tableName} WHERE email = ?`,
-      [email]
-    );
-
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     if (rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(401).json({ message: "Invalid email or password." });
     }
 
     const user = rows[0];
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) {
-      return res.status(401).json({ message: "Incorrect password" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role },
-      SECRET,
-      { expiresIn: "2h" }
-    );
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
 
     res.json({
       message: "Login successful",
       token,
       user: {
         id: user.id,
-        name: user[nameField],
+        name: user.name,
         email: user.email,
-        role,
+        role: user.role,
       },
     });
   } catch (err) {
-    console.error("Login Error:", err);
-    res.status(500).json({ message: "Login failed" });
+    console.error("❌ Login error:", err);
+    res.status(500).json({ message: "Login failed." });
   }
 });
 

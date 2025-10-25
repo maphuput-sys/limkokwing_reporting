@@ -1,10 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const Courses = () => {
-  const courses = [
-    { name: "Software Engineering", code: "SE101", lecturer: "Dr. Maphupu" },
-    { name: "Multimedia Design", code: "MD102", lecturer: "Mrs. Ts'along" },
-  ];
+const API_BASE_URL = "http://localhost:5000/api"; // your backend URL
+
+const PRLCourses = ({ plId }) => {
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/courses`, {
+          params: { pl_id: plId },
+        });
+        setCourses(res.data);
+      } catch (err) {
+        console.error("❌ Failed to fetch courses:", err);
+      }
+    };
+    fetchCourses();
+  }, [plId]);
 
   return (
     <div>
@@ -14,16 +28,18 @@ const Courses = () => {
           <thead className="table-dark">
             <tr>
               <th>Course Name</th>
-              <th>Course Code</th>
+              <th>Code</th>
               <th>Lecturer</th>
+              <th>Venue</th>
             </tr>
           </thead>
           <tbody>
             {courses.map((course, index) => (
               <tr key={index}>
-                <td>{course.name}</td>
-                <td>{course.code}</td>
+                <td>{course.course_name}</td>
+                <td>{course.course_code}</td>
                 <td>{course.lecturer}</td>
+                <td>{course.venue || "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -33,4 +49,4 @@ const Courses = () => {
   );
 };
 
-export default Courses;
+export default PRLCourses;

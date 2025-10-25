@@ -1,10 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 
 import Header from "./Header";
 import ErrorBoundary from "./ErrorBoundary";
-
 
 import Login from "./Login";
 import Registration from "./Registration";
